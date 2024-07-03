@@ -11,36 +11,36 @@ Office.onReady((info) => {
     document.getElementById("app-body").style.display = "flex";
     document.getElementById("run").onclick = run;
 
-    Office.context.mailbox.addHandlerAsync(
-      Office.EventType.SelectedItemsChanged,
-      SelectedItemsChangedHandler,
-      asyncResult => {
-          if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-              console.warn("Failed to add mutti item selection handler: " + asyncResult.error.message);
-              return;
-          }
-          console.log("Multi Mail Event handler added.");
+    // Register an event handler to identify when messages are selected.
+    Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, run, (asyncResult) => {
+      if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+        console.log(asyncResult.error.message);
+        return;
       }
-    );
+
+      console.log("Event handler added.");
+    });
   }
 });
 
 export async function run() {
-  /**
-   * Insert your Outlook code here
-   */
+  // Clear list of previously selected messages, if any.
+  const list = document.getElementById("selected-items");
+  while (list.firstChild) {
+    list.removeChild(list.firstChild);
+  }
 
-  const item = Office.context.mailbox.item;
-  document.getElementById("item-subject").innerHTML = "<b>Subject:</b> <br/>" + item.subject;
-}
-
-export function SelectedItemsChangedHandler() {
-  console.log("Outer SelectedItemsChangedHandler");
+  // Retrieve the subject line of the selected messages and log it to a list in the task pane.
   Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
-      console.log("Async SelectedItemsChangedHandler", asyncResult);
-      if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-          console.warn("Failed to handle multi select message: " + asyncResult.error.message);
-          return;
-      }
+    if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+      console.log(asyncResult.error.message);
+      return;
+    }
+
+    asyncResult.value.forEach((item) => {
+      const listItem = document.createElement("li");
+      listItem.textContent = item.subject;
+      list.appendChild(listItem);
+    });
   });
 }

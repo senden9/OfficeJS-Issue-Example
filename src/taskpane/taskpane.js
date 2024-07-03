@@ -10,6 +10,18 @@ Office.onReady((info) => {
     document.getElementById("sideload-msg").style.display = "none";
     document.getElementById("app-body").style.display = "flex";
     document.getElementById("run").onclick = run;
+
+    Office.context.mailbox.addHandlerAsync(
+      Office.EventType.SelectedItemsChanged,
+      SelectedItemsChangedHandler,
+      asyncResult => {
+          if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+              console.warn("Failed to add mutti item selection handler: " + asyncResult.error.message);
+              return;
+          }
+          console.log("Multi Mail Event handler added.");
+      }
+    );
   }
 });
 
@@ -20,4 +32,15 @@ export async function run() {
 
   const item = Office.context.mailbox.item;
   document.getElementById("item-subject").innerHTML = "<b>Subject:</b> <br/>" + item.subject;
+}
+
+export function SelectedItemsChangedHandler() {
+  console.log("Outer SelectedItemsChangedHandler");
+  Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
+      console.log("Async SelectedItemsChangedHandler", asyncResult);
+      if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+          console.warn("Failed to handle multi select message: " + asyncResult.error.message);
+          return;
+      }
+  });
 }
